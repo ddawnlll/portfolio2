@@ -21,7 +21,7 @@ const sectionReveal = { hidden: { opacity: 0, y: 44, filter: 'blur(9px)', clipPa
 
 function useTheme() {
   const [dark, setDark] = useState(() => localStorage.getItem('yusuf-theme') ? localStorage.getItem('yusuf-theme') === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches)
-  useEffect(() => { document.documentElement.dataset.theme = dark ? 'dark' : 'light'; localStorage.setItem('yusuf-theme', dark ? 'dark' : 'light'); document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#21191d' : '#f9dfe5') }, [dark])
+  useEffect(() => { document.documentElement.dataset.theme = dark ? 'dark' : 'light'; localStorage.setItem('yusuf-theme', dark ? 'dark' : 'light'); document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#21191d' : '#f7eee9') }, [dark])
   return [dark, setDark] as const
 }
 
