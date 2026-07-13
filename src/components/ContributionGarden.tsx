@@ -2,23 +2,26 @@ import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CalendarDays, GitCommitHorizontal, GitPullRequest, MessageCircleQuestion } from 'lucide-react'
 import githubData from '../data/github.json'
+import type { Locale } from '../i18n'
 
 type Day = (typeof githubData.days)[number]
 
-const month = new Intl.DateTimeFormat('en', { month: 'short' })
-const fullDate = new Intl.DateTimeFormat('en', { day: 'numeric', month: 'long', year: 'numeric' })
+const localeMap: Record<Locale, string> = { en: 'en-GB', de: 'de-DE', tr: 'tr-TR' }
+type GardenLabels = { eyebrow: string; title: string; days: string; repos: string; commits: string; repositories: string; contributions: string; hover: string; hoverInfo: string; quiet: string; busy: string; pullRequests: string; issues: string; updated: string; view: string; calendar: string }
 
 function levelFor(count: number, max: number) {
   if (count === 0) return 0
   return Math.min(4, Math.max(1, Math.ceil((count / Math.max(max, 1)) * 4)))
 }
 
-export default function ContributionGarden() {
+export default function ContributionGarden({ locale, labels }: { locale: Locale; labels: GardenLabels }) {
   const [view, setView] = useState<'garden' | 'repos'>('garden')
   const [activeDay, setActiveDay] = useState<Day | null>(null)
   const [activeRepo, setActiveRepo] = useState(githubData.repositories[0]?.name ?? '')
   const maxDay = Math.max(...githubData.days.map((day) => day.contributionCount), 1)
   const maxRepo = Math.max(...githubData.repositories.map((repo) => repo.commits), 1)
+  const month = new Intl.DateTimeFormat(localeMap[locale], { month: 'short' })
+  const fullDate = new Intl.DateTimeFormat(localeMap[locale], { day: 'numeric', month: 'long', year: 'numeric' })
 
   const weeks = useMemo(() => {
     const result: Day[][] = []
@@ -45,28 +48,28 @@ export default function ContributionGarden() {
     <div className="garden surface-panel">
       <div className="garden__topline">
         <div>
-          <p className="eyebrow">A real year, not a vanity counter</p>
-          <h3>Contribution rhythm</h3>
+          <p className="eyebrow">{labels.eyebrow}</p>
+          <h3>{labels.title}</h3>
         </div>
-        <div className="segmented" role="group" aria-label="Contribution view">
+        <div className="segmented" role="group" aria-label={labels.view}>
           <button className={view === 'garden' ? 'is-active' : ''} onClick={() => setView('garden')} aria-pressed={view === 'garden'}>
-            <CalendarDays size={16} /> Days
+            <CalendarDays size={16} /> {labels.days}
           </button>
           <button className={view === 'repos' ? 'is-active' : ''} onClick={() => setView('repos')} aria-pressed={view === 'repos'}>
-            <GitCommitHorizontal size={16} /> Repos
+            <GitCommitHorizontal size={16} /> {labels.repos}
           </button>
         </div>
       </div>
 
-      <div className="contribution-totals" aria-label="GitHub contribution totals">
-        <div><strong>{githubData.totals.commits}</strong><span>commits</span></div>
-        <div><strong>{githubData.totals.repositories}</strong><span>repositories</span></div>
-        <div><strong>{githubData.totals.contributions}</strong><span>all contributions</span></div>
+      <div className="contribution-totals" aria-label={labels.title}>
+        <div><strong>{githubData.totals.commits}</strong><span>{labels.commits}</span></div>
+        <div><strong>{githubData.totals.repositories}</strong><span>{labels.repositories}</span></div>
+        <div><strong>{githubData.totals.contributions}</strong><span>{labels.contributions}</span></div>
       </div>
 
       {view === 'garden' ? (
         <motion.div className="calendar-view" key="garden" initial={{ clipPath: 'inset(0 100% 0 0)', filter: 'blur(5px)' }} animate={{ clipPath: 'inset(0 0% 0 0)', filter: 'blur(0px)' }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
-          <div className="calendar-scroll" role="group" aria-label={`${githubData.range.year} GitHub contribution calendar`}>
+          <div className="calendar-scroll" role="group" aria-label={`${githubData.range.year} ${labels.calendar}`}>
             <div className="month-row" style={{ gridTemplateColumns: `repeat(${weeks.length}, 14px)` }}>
               {monthLabels.map((label, index) => <span key={`${label}-${index}`}>{label}</span>)}
             </div>
@@ -78,7 +81,7 @@ export default function ContributionGarden() {
                       key={day.date}
                       className="day"
                       data-level={levelFor(day.contributionCount, maxDay)}
-                      aria-label={`${fullDate.format(new Date(`${day.date}T12:00:00`))}: ${day.contributionCount} contributions`}
+                      aria-label={`${fullDate.format(new Date(`${day.date}T12:00:00`))}: ${day.contributionCount} ${labels.contributions}`}
                       onMouseEnter={() => setActiveDay(day)}
                       onFocus={() => setActiveDay(day)}
                       onMouseLeave={() => setActiveDay(null)}
@@ -91,12 +94,12 @@ export default function ContributionGarden() {
           </div>
           <div className="garden__feedback" aria-live="polite">
             {activeDay ? (
-              <><strong>{activeDay.contributionCount} contributions</strong><span>{fullDate.format(new Date(`${activeDay.date}T12:00:00`))}</span></>
+              <><strong>{activeDay.contributionCount} {labels.contributions}</strong><span>{fullDate.format(new Date(`${activeDay.date}T12:00:00`))}</span></>
             ) : (
-              <><strong>Hover or focus a day</strong><span>Every cell comes from GitHub's contribution calendar.</span></>
+              <><strong>{labels.hover}</strong><span>{labels.hoverInfo}</span></>
             )}
           </div>
-          <div className="legend"><span>Quiet</span>{[0, 1, 2, 3, 4].map((level) => <i key={level} data-level={level} />)}<span>Busy</span></div>
+          <div className="legend"><span>{labels.quiet}</span>{[0, 1, 2, 3, 4].map((level) => <i key={level} data-level={level} />)}<span>{labels.busy}</span></div>
         </motion.div>
       ) : (
         <motion.div className="repo-view" key="repos" initial={{ clipPath: 'inset(0 0 100% 0)', y: 16 }} animate={{ clipPath: 'inset(0 0 0% 0)', y: 0 }} transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}>
@@ -119,9 +122,9 @@ export default function ContributionGarden() {
       )}
 
       <div className="garden__footnote">
-        <GitPullRequest size={16} /> {githubData.totals.pullRequests} pull requests
-        <MessageCircleQuestion size={16} /> {githubData.totals.issues} issues
-        <span>Updated {fullDate.format(new Date(githubData.range.to))}</span>
+        <GitPullRequest size={16} /> {githubData.totals.pullRequests} {labels.pullRequests}
+        <MessageCircleQuestion size={16} /> {githubData.totals.issues} {labels.issues}
+        <span>{labels.updated} {fullDate.format(new Date(githubData.range.to))}</span>
       </div>
     </div>
   )

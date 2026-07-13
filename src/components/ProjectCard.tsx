@@ -21,7 +21,7 @@ function ProjectArt({ type }: { type: Project['art'] }) {
   return <svg viewBox="0 0 600 300" aria-hidden="true"><path d="M44 183c92-185 162 87 254-26s155 90 258-47" /><path d="M44 220c104-88 173 45 272-52s145 58 240-20" /><path d="M44 105c71-85 144 30 218-21s188-19 294 28" /></svg>
 }
 
-export default function ProjectCard({ project, index }: { project: Project; index: number }) {
+export default function ProjectCard({ project, index, labels }: { project: Project; index: number; labels: { repository: string; live: string } }) {
   const onMove = (event: MouseEvent<HTMLElement>) => {
     const rect = event.currentTarget.getBoundingClientRect()
     event.currentTarget.style.setProperty('--mx', `${event.clientX - rect.left}px`)
@@ -38,8 +38,8 @@ export default function ProjectCard({ project, index }: { project: Project; inde
         <p>{project.description}</p>
         <div className="project-card__tags"><span>{project.language}</span>{project.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
         <div className="project-card__links">
-          <a href={project.href} target="_blank" rel="noreferrer">Repository <ArrowUpRight size={16} /></a>
-          {project.live && <a href={project.live} target="_blank" rel="noreferrer">Live docs <ExternalLink size={15} /></a>}
+          <a href={project.href} target="_blank" rel="noreferrer">{labels.repository} <ArrowUpRight size={16} /></a>
+          {project.live && <a href={project.live} target="_blank" rel="noreferrer">{labels.live} <ExternalLink size={15} /></a>}
         </div>
       </div>
     </article>
